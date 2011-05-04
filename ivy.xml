@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
+  <info organisation='${ivy.artifact.group}' module='${ivy.artifact.id}' revision='${project.revision}' />
+
+  <configurations>
+    <conf name="default" />
+    <conf name="test" visibility="private" />
+  </configurations>
+
+  <publications>
+    <artifact name="${ivy.artifact.id}" type="jar" conf="default" />
+  </publications>
+
+  <dependencies defaultconf="default->default">
+    <dependency org="pentaho" name="pentaho-report-wizard-core" rev="${dependency.pentaho-report-wizard-core.revision}" changing="true" >
+    	<exclude org="pentaho-reporting-engine" />
+    </dependency>
+    <dependency org="org.codehaus.castor" name="castor" rev="1.0.5" transitive="false" />
+
+    <!--  external dependencies -->
+    <dependency org="commons-logging" name="commons-logging" rev="1.1" transitive="false" />
+    <dependency org="commons-logging" name="commons-logging-api" rev="1.1" transitive="false" />
+    <dependency org="dom4j" name="dom4j" rev="1.6.1" transitive="false" />
+    <dependency org='commons-logging' name='commons-logging-api' rev='1.1' transitive='false' />
+    <dependency org="jfree" name="jcommon" rev="1.0.14" />
+    <dependency org="javax.servlet" name="servlet-api" rev="2.4" />
+    <dependency org="pentaho" name="pentaho-metadata" rev="${dependency.pentaho-metadata.revision}" changing="true" />
+    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-api" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
+    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-util" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
+    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-engine-core" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
+    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-engine-security" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
+    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-engine-services" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
+    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-repository" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
+    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-ui-foundation" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
+    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-web" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
+    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-plugin-actions" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
+    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-web-servlet" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
+    
+    <!-- START JAX-WS (Service extension) dependencies.  You can comment these out if you are not deploying 
+         a service to the BIServer -->
+    <!-- metro -->
+    <dependency org="metro" name="metro-webservices-api" rev="2.0" />
+    <dependency org="metro" name="metro-webservices-rt" rev="2.0" />
+
+    <!-- jaxws-spring extension (allows spring configuration of web services); see pentahoServices.spring.xml -->
+    <dependency org="org.jvnet.jax-ws-commons.spring" name="jaxws-spring" rev="1.8" transitive="false" />
+    <dependency org="org.apache.xbean" name="xbean-spring" rev="2.7" />
+    
+    <!-- jersey -->
+    <dependency org="com.sun.jersey" name="jersey-core" rev="1.3">
+      <artifact name="jersey-core" type="jar"/>
+    </dependency>
+    <!-- END JAX-WS (Service extension) dependencies -->
+
+    <!--  test dependencies -->
+    <dependency org="junit"              name="junit"              rev="4.4" conf="test->default"/>
+    <dependency org="pentaho" name="pentaho-bi-platform-test-foundation" rev="${dependency.bi-platform.revision}" changing="true" conf="test->default" transitive="true" />
+    <dependency org="pentaho" name="pentaho-bi-platform-plugin-services" rev="${dependency.bi-platform.revision}" changing="true" conf="test->default" transitive="true" />
+  </dependencies>
+</ivy-module>
