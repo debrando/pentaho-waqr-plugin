@@ -12,9 +12,6 @@
   </publications>
 
   <dependencies defaultconf="default->default">
-    <dependency org="pentaho" name="pentaho-report-wizard-core" rev="${dependency.pentaho-report-wizard-core.revision}" changing="true" >
-    	<exclude org="pentaho-reporting-engine" />
-    </dependency>
     <dependency org="org.codehaus.castor" name="castor" rev="1.0.5" transitive="false" />
 
     <!--  external dependencies -->
