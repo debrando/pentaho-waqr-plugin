@@ -56,5 +56,7 @@
     <dependency org="junit"              name="junit"              rev="4.4" conf="test->default"/>
     <dependency org="pentaho" name="pentaho-bi-platform-test-foundation" rev="${dependency.bi-platform.revision}" changing="true" conf="test->default" transitive="true" />
     <dependency org="pentaho" name="pentaho-bi-platform-plugin-services" rev="${dependency.bi-platform.revision}" changing="true" conf="test->default" transitive="true" />
+    <dependency org="com.mockrunner" name="mockrunner-servlet" rev="0.3.7" conf="test->default" />
+    
   </dependencies>
 </ivy-module>

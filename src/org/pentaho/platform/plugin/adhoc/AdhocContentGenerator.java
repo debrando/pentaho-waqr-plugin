@@ -119,8 +119,6 @@ import org.pentaho.platform.util.web.SimpleUrlFactory;
 import org.pentaho.platform.util.xml.XmlHelper;
 import org.pentaho.platform.util.xml.dom4j.XmlDom4JHelper;
 import org.pentaho.platform.web.http.request.HttpRequestParameterProvider;
-import org.pentaho.platform.web.servlet.AdhocWebServiceException;
-import org.pentaho.platform.web.servlet.AdhocWebServiceInteract;
 import org.pentaho.platform.web.servlet.ServletBase;
 import org.pentaho.pms.core.exception.PentahoMetadataException;
 import org.pentaho.pms.schema.concept.DefaultPropertyID;

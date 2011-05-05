@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -1477,7 +1478,6 @@ public class AdhocWebService extends ServletBase {
     String reportXML = parameterProvider.getStringParameter("content", null); //$NON-NLS-1$    
     String path = parameterProvider.getStringParameter("path", null); //$NON-NLS-1$
     String templatePath = parameterProvider.getStringParameter("templatePath", null); //$NON-NLS-1$ 
-    boolean overwrite = parameterProvider.getStringParameter("overwrite", "false").equalsIgnoreCase("true"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     String outputType = parameterProvider.getStringParameter("outputType", null); //$NON-NLS-1$
 
     IUnifiedRepository repository = PentahoSystem.get(IUnifiedRepository.class, userSession);
@@ -1520,10 +1520,17 @@ public class AdhocWebService extends ServletBase {
     ByteArrayOutputStream jfreeOutputStream = new ByteArrayOutputStream();
     createJFreeReportDefinitionAsStream(reportXML, templatePath, mqlNode, userSession, jfreeOutputStream);
     String jfreeString = jfreeOutputStream.toString(LocaleHelper.getSystemEncoding());
-    String filePath = path.substring(0, path.lastIndexOf('/') + 1);
-    xactionFile = repository.getFile(filePath + xactionFilename);
 
     try {
+      String filePath = path;
+      if(filePath != null && filePath.length() > 0 && filePath.endsWith(WAQR_EXTENSION)) {
+        filePath = filePath.substring(0, filePath.lastIndexOf('/') + 1);  
+      } else if(!filePath.endsWith("/")) {
+        filePath = filePath + "/";
+      }
+      
+      xactionFile = repository.getFile(URLDecoder.decode(filePath + xactionFilename, LocaleHelper.getSystemEncoding()));
+
       // create .xaction document and save it to an output stream
       ByteArrayOutputStream xactionOutputStream = createMQLReportActionSequenceAsStream(reportName, reportDesc,
           mqlNode, outputTypeList, xactionFilename, jfreeString, jfreeFilename, "warn", userSession); //$NON-NLS-1$
@@ -1715,7 +1722,7 @@ public class AdhocWebService extends ServletBase {
           + WAQR_XREPORTSPEC_FILE_EXTENSION;
       Document reportSpecDoc = null;
       try {
-        RepositoryFile file = repository.getFile(reportSpecFile);
+        RepositoryFile file = repository.getFile(URLDecoder.decode(reportSpecFile, LocaleHelper.getSystemEncoding()));
         RepositoryFileInputStream is = new RepositoryFileInputStream(file);
         org.dom4j.io.SAXReader reader = new org.dom4j.io.SAXReader();
         reader.setEntityResolver(new SolutionURIResolver());
@@ -1983,22 +1990,26 @@ public class AdhocWebService extends ServletBase {
    */
   public boolean delete(final IUnifiedRepository unifiedRepository, final String path) throws AdhocWebServiceException {
     try {
-      RepositoryFile file = unifiedRepository.getFile(path);
+      RepositoryFile file = unifiedRepository.getFile(URLDecoder.decode(path, LocaleHelper.getSystemEncoding()));
       if (file != null) {
         unifiedRepository.deleteFile(file.getId(), "Deleting the file");
       }
       return true;
     } catch (UnifiedRepositoryException ure) {
       throw new AdhocWebServiceException(ure);
+    } catch (UnsupportedEncodingException e) {
+      throw new AdhocWebServiceException(e);
     }
+
   }
 
   /**
   * Gets id of parent folder of file  
+   * @throws UnsupportedEncodingException 
   */
-  private Serializable getParentId(final String filePath, IUnifiedRepository unifiedRepository) {
+  private Serializable getParentId(final String filePath, IUnifiedRepository unifiedRepository) throws UnsupportedEncodingException {
     // get id of parent from parent path
-    RepositoryFile parentFile = unifiedRepository.getFile(filePath);
+    RepositoryFile parentFile = unifiedRepository.getFile(URLDecoder.decode(filePath, LocaleHelper.getSystemEncoding()));
     return parentFile.getId();
   }
 
