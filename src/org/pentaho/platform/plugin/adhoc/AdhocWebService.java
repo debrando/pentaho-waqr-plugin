@@ -1523,7 +1523,7 @@ public class AdhocWebService extends ServletBase {
 
     try {
       String filePath = path;
-      if(filePath != null && filePath.length() > 0 && filePath.endsWith(WAQR_EXTENSION)) {
+      if(filePath != null && filePath.length() > 0 && filePath.indexOf('.') != -1) {
         filePath = filePath.substring(0, filePath.lastIndexOf('/') + 1);  
       } else if(!filePath.endsWith("/")) {
         filePath = filePath + "/";
