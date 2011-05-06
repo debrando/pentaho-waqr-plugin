@@ -1562,7 +1562,7 @@ public class AdhocWebService extends ServletBase {
 
         // Save Xaction file to the repository
         xactionFile = new RepositoryFile.Builder(xactionFilename).versioned(false)
-            .title(RepositoryFile.ROOT_LOCALE, fileName).description(RepositoryFile.ROOT_LOCALE, fileName).build();
+            .title(RepositoryFile.ROOT_LOCALE, xactionFilename).description(RepositoryFile.ROOT_LOCALE, fileName).build();
 
         xactionFile = repository.createFile(parentId, xactionFile, new SimpleRepositoryFileData(
             new ByteArrayInputStream(xactionOutputStream.toByteArray()), LocaleHelper.getSystemEncoding(),
@@ -1570,7 +1570,7 @@ public class AdhocWebService extends ServletBase {
         // If xaction file was saved successfully, then save the report definition file
         if (xactionFile != null) {
           jfreeFile = new RepositoryFile.Builder(jfreeFilename).versioned(false)
-              .title(RepositoryFile.ROOT_LOCALE, fileName).description(RepositoryFile.ROOT_LOCALE, fileName)
+              .title(RepositoryFile.ROOT_LOCALE, jfreeFilename).description(RepositoryFile.ROOT_LOCALE, fileName)
               .hidden(true).build();
 
           jfreeFile = repository.createFile(parentId, jfreeFile, new SimpleRepositoryFileData(new ByteArrayInputStream(
@@ -1579,7 +1579,7 @@ public class AdhocWebService extends ServletBase {
           // If the report definition file was saved successfully then save the report spec file
           if (jfreeFile != null) {
             xreportspecFile = new RepositoryFile.Builder(xreportSpecFilename).versioned(false)
-                .title(RepositoryFile.ROOT_LOCALE, fileName).description(RepositoryFile.ROOT_LOCALE, fileName)
+                .title(RepositoryFile.ROOT_LOCALE, xreportSpecFilename).description(RepositoryFile.ROOT_LOCALE, fileName)
                 .hidden(true).build();
 
             xreportspecFile = repository.createFile(parentId, xreportspecFile, new SimpleRepositoryFileData(
