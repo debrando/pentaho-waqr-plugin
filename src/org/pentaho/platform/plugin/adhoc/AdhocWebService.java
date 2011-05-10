@@ -1436,6 +1436,7 @@ public class AdhocWebService extends ServletBase {
     }
 
     String fileName = parameterProvider.getStringParameter("name", null); //$NON-NLS-1$
+    // Passing the name without an extension to the saveReportSpec method
     if (fileName != null && fileName.length() > 0 && fileName.lastIndexOf('.') >= 0) {
       fileName = fileName.substring(0, fileName.lastIndexOf('.'));
     }
@@ -1522,14 +1523,8 @@ public class AdhocWebService extends ServletBase {
     String jfreeString = jfreeOutputStream.toString(LocaleHelper.getSystemEncoding());
 
     try {
-      String filePath = path;
-      if(filePath != null && filePath.length() > 0 && filePath.indexOf('.') != -1) {
-        filePath = filePath.substring(0, filePath.lastIndexOf('/') + 1);  
-      } else if(!filePath.endsWith("/")) {
-        filePath = filePath + "/";
-      }
-      
-      xactionFile = repository.getFile(URLDecoder.decode(filePath + xactionFilename, LocaleHelper.getSystemEncoding()));
+     
+      xactionFile = repository.getFile(URLDecoder.decode(path + '/' +  xactionFilename, LocaleHelper.getSystemEncoding()));
 
       // create .xaction document and save it to an output stream
       ByteArrayOutputStream xactionOutputStream = createMQLReportActionSequenceAsStream(reportName, reportDesc,
@@ -1540,13 +1535,13 @@ public class AdhocWebService extends ServletBase {
             xactionOutputStream.toByteArray()), LocaleHelper.getSystemEncoding(), "application/xml"),
             "Update to existing file");
         if (xactionFile != null) {
-          jfreeFile = repository.getFile(filePath + jfreeFilename);
+          jfreeFile = repository.getFile(path + '/' + jfreeFilename);
           if (jfreeFile != null) {
             jfreeFile = repository.updateFile(jfreeFile, new SimpleRepositoryFileData(new ByteArrayInputStream(
                 jfreeOutputStream.toByteArray()), LocaleHelper.getSystemEncoding(), "application/xml"),
                 "Update to existing file");
           }
-          xreportspecFile = repository.getFile(filePath + xreportSpecFilename);
+          xreportspecFile = repository.getFile(path + '/' + xreportSpecFilename);
           if (xreportspecFile != null) {
             xreportspecFile = repository.updateFile(xreportspecFile, new SimpleRepositoryFileData(
                 new ByteArrayInputStream(reportXML.getBytes()), LocaleHelper.getSystemEncoding(), "application/xml"),
