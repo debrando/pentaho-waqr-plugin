@@ -1522,6 +1522,13 @@ public class AdhocWebService extends ServletBase {
     createJFreeReportDefinitionAsStream(reportXML, templatePath, mqlNode, userSession, jfreeOutputStream);
     String jfreeString = jfreeOutputStream.toString(LocaleHelper.getSystemEncoding());
 
+    // If file is an existing file the path we will recieve will also be the complete file name
+    // So make sure that we can trim the name of the file from the path before proceeding
+    if(path.indexOf('.') < 0) {
+      
+        path = path.substring(0, path.lastIndexOf('/'));
+    }
+
     try {
      
       xactionFile = repository.getFile(URLDecoder.decode(path + '/' +  xactionFilename, LocaleHelper.getSystemEncoding()));

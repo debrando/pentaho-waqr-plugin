@@ -201,7 +201,7 @@ RepositoryBrowserController.prototype.remoteSave= function( filename,
         
       }
     );
-    return true;
+    return localThis.bIsSaving;
   }
   else
   {

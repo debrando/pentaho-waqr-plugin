@@ -1210,7 +1210,7 @@ Controller.prototype.enableReportSaveBtns = function()
   var bIsSaving = this.repositoryBrowserController.bIsSaving;
 
   if(window.parent && window.parent.mantle_initialized == true){
-      window.parent.enableAdhocSave( bEnable && !bIsSaving );
+      window.parent.enableSave( bEnable && !bIsSaving );
   }
   this.wiz.getPreviewBtn().setEnabled( bEnable );
   this.wiz.getSaveBtn().setEnabled( bEnable && !bIsSaving );
