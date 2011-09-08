@@ -53,6 +53,7 @@
 
   <script src="resources/js/common/util/dojo.js" type="text/javascript"></script>
 
+
   <script type="text/javascript">
     dojo.registerModulePath("adhoc", "../../../../resources/js");
   </script>
@@ -151,7 +152,12 @@
   <script src="resources/js/controller/RepositoryBrowserController.js" type="text/javascript"></script>
   <script src="resources/js/controller/Controller.js" type="text/javascript"></script>
 
-  <script language='javascript' src='../data-access/resources/gwt/DatasourceEditor.nocache.js'></script>
+  <script type="text/javascript">
+    // check to see if we're an iframe inside of a page with Data Access. If not add the module.
+    if(!window.parent || !window.parent.pho.openDatasourceEditor){
+      document.write("<script language='javascript' src='../data-access/resources/gwt/DatasourceEditor.nocache.js'></"+"script>");
+    }
+  </script>
 
   <script type="text/javascript">
     var msgCtrl = new MessageCtrl();
@@ -196,18 +202,43 @@
     }
 
     var dataaccessAddBtnCallback = function() {
-        openDatasourceEditor(datasourceEditorCallback);
+        var actionFunct = null;
+        // check to see if we're an iframe inside of a page with Data Access. If not add the module.
+        if(window.parent && window.parent.pho.openDatasourceEditor){
+            actionFunct = window.parent.pho.openDatasourceEditor;
+        } else {
+            actionFunct = window.pho.openDatasourceEditor;
+        }
+        actionFunct(datasourceEditorCallback);
     }
 
     var dataaccessEditBtnCallback = function() {
-        openEditDatasourceEditor(gCtrlr.modelId, gCtrlr.viewId, datasourceEditorCallback);
+        
+        var actionFunct = null;
+        // check to see if we're an iframe inside of a page with Data Access. If not add the module.
+        if(window.parent && window.parent.pho.openEditDatasourceEditor){
+            actionFunct = window.parent.pho.openEditDatasourceEditor;
+        } else {
+            actionFunct = window.pho.openEditDatasourceEditor;
+        }
+        actionFunct(gCtrlr.modelId, gCtrlr.viewId, datasourceEditorCallback);
     }
-
+    
     var dataaccessDeleteBtnCallback = function() {
+        
+        var actionFunct = null;
+        // check to see if we're an iframe inside of a page with Data Access. If not add the module.
+        if(window.parent && window.parent.pho.openEditDatasourceEditor){
+            actionFunct = window.parent.pho.deleteModel;
+        } else {
+            actionFunct = window.pho.deleteModel;
+        }
+    
     	var shouldDeleteModel = msgCtrl.confirm(Messages.getString("deleteModelWarningMessage"));
     	if(shouldDeleteModel) {
-        	deleteModel(gCtrlr.modelId, gCtrlr.viewId, modelDeleteCallback);
+            actionFunct(gCtrlr.modelId, gCtrlr.viewId, modelDeleteCallback);
     	}
+    	
     }
 
 
@@ -405,7 +436,20 @@
 <div id="footer">
   <table width="100%;" border="0" align="right" cellpadding="0" cellspacing="0">
     <tr>
-      <td id='busyContainer' style='width:100%;'>
+      <td id='busyContainer' style='width:30%;'>
+      </td>
+      <td valign="middle"; id="waqrDeprecatedAlert">
+        <table width="460px" style="background-color: #fffdd5; border-style: solid; border-color: #dcb114; border-width= 1px; font: normal .70em Tahoma, 'Trebuchet MS', Arial">
+          <tr>
+            <td>
+              <img src="images/warning.png"/>
+            </td>
+            <td>
+            Web Ad Hoc Query and Reporting has been replace by the new Interactive Reporting client.<br/>
+            It is provided as a convenience but will no longer be enhanced or offically supported by Pentaho.
+            </td>
+          </tr>
+        </table>
       </td>
       <td id="previewFormatPrompt" nowrap style="width:12ex;white-space:nowrap; font: normal .85em Tahoma, 'Trebuchet MS', Arial;" valign="middle"><!-- Preview As:&nbsp; --></td>
       <td id="previewTypeContainer"></td>

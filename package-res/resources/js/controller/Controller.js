@@ -128,6 +128,14 @@ Controller = function( wiz, mdModels, fileName )
   // next, back, save*, preview buttons all need to be disabled before we can load the model
   this.getModel();  // NOTE: runs asynchronously
 
+  
+  // PMD-663: Save the information about this report's location so "save" button doesn't prompt for location
+  if (undefined != this.reportSpecPath){ 
+    this.repositoryBrowserController.solution = this.reportSpecPath.solution; 
+    this.repositoryBrowserController.path = this.reportSpecPath.path; 
+    this.repositoryBrowserController.filename = this.reportSpecPath.filename; 
+  }
+
   /* hookup PAGE 0 callbacks */
   
   /* hookup PAGE 1 callbacks */
@@ -1231,7 +1239,6 @@ Controller.prototype.setBView = function( modelId, viewId )
 	  }
   }
   
-  this.repositoryBrowserController.reset(); // force save btn to bring up save as dialog
 };
 
 // TODO sbarkdull any item being added to the group ctrl needs to be removed
