@@ -13,6 +13,15 @@
 				image="api/repos/xwaqr/resources/images/btn_ql_newreport.png"
 				command="openURL('${Launcher.NEW_REPORT_TITLE}', '${Launcher.NEW_REPORT_TOOLTIP}', 'api/repos/xwaqr/editor')"/>
 	    </overlay>
+		
+	    <overlay id="startup.waqr"  resourcebundle="content/waqr/resources/messages/messages">
+			<overlay id="startup.waqr"  resourcebundle="content/waqr/resources/messages/messages">
+	            <toolbar id="mainToolbar">
+                  <toolbarbutton id="openWaqr" image="../content/waqr/resources/images/new_report_32.png" onclick="mainToolbarHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" tooltiptext="${Launcher.NEW_REPORT_TOOLTIP}"  insertafter="dummyPluginContentButton"/>
+	            </toolbar>
+			</overlay>    		
+	    </overlay>    		
+		
     </overlays>  
    <static-paths>
      <static-path url="/waqr/resources" localFolder="resources"/>
