@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin title="Pentaho Adhoc Reporting" name="waqr">
 
-    <menu-items>
-        <menu-item id="adhocrep" anchor="file-new-submenu" label="Report..." command="api/repos/xwaqr/editor" type="MENU_ITEM" how="LAST_CHILD"/>
-    </menu-items>
-
     <overlays>
 	    <overlay id="launch" resourcebundle="system/waqr/resources/messages/messages.properties">
  			<button 
@@ -19,10 +15,14 @@
 	            <toolbar id="mainToolbar">
                   <toolbarbutton id="openWaqr" image="../content/waqr/resources/images/new_report_32.png" onclick="mainToolbarHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" tooltiptext="${Launcher.NEW_REPORT_TOOLTIP}"  insertafter="dummyPluginContentButton"/>
 	            </toolbar>
+				<menubar id="newmenu">
+					<menuitem id="adhocrep" label="${Launcher.NEW_REPORT_TOOLTIP}" command="mainMenubarHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" />		
+				</menubar>
 			</overlay>    		
 	    </overlay>    		
 		
     </overlays>  
+    
    <static-paths>
      <static-path url="/waqr/resources" localFolder="resources"/>
    </static-paths>
