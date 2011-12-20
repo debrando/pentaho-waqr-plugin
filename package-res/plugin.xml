@@ -12,10 +12,10 @@
 		
 	    <overlay id="startup.waqr"  resourcebundle="content/waqr/resources/messages/messages">
             <toolbar id="mainToolbar">
-                <toolbarbutton id="openWaqr" image="../content/waqr/resources/images/new_report_32.png" onclick="mainToolbarHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" tooltiptext="${Launcher.NEW_REPORT_TOOLTIP}"  insertafter="dummyPluginContentButton"/>
+                <toolbarbutton id="openWaqr" image="../content/waqr/resources/images/new_report_32.png" onclick="mantleXulHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" tooltiptext="${Launcher.NEW_REPORT_TOOLTIP}"  insertafter="dummyPluginContentButton"/>
             </toolbar>
 			<menubar id="newmenu">
-				<menuitem id="adhocrep" label="${Launcher.NEW_REPORT_TOOLTIP}" command="mainMenubarHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" />		
+				<menuitem id="adhocrep" label="${Launcher.NEW_REPORT_TOOLTIP}" command="mantleXulHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" />		
 			</menubar>
 	    </overlay>    		
 		
