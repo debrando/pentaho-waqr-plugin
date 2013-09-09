@@ -2,23 +2,11 @@
 <plugin title="Pentaho Adhoc Reporting" name="waqr">
 
     <overlays>
-	    <overlay id="launch" resourcebundle="system/waqr/resources/messages/messages.properties">
- 			<button 
-				id="launch_new_report" 
-				label="${Launcher.NEW_REPORT}" 
-				image="api/repos/xwaqr/resources/images/btn_ql_newreport.png"
-				command="openURL('${Launcher.NEW_REPORT_TITLE}', '${Launcher.NEW_REPORT_TOOLTIP}', 'api/repos/xwaqr/editor')"/>
-	    </overlay>
-		
 	    <overlay id="startup.waqr"  resourcebundle="content/waqr/resources/messages/messages">
-            <toolbar id="mainToolbar">
-                <toolbarbutton id="openWaqr" image="../content/waqr/resources/images/new_report_32.png" onclick="mantleXulHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" tooltiptext="${Launcher.NEW_REPORT_TOOLTIP}"  insertafter="dummyPluginContentButton"/>
-            </toolbar>
-			<menubar id="newmenu">
-				<menuitem id="adhocrep" label="${Launcher.NEW_REPORT_TOOLTIP}" command="mantleXulHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" />		
-			</menubar>
-	    </overlay>    		
-		
+            <menubar id="newmenu">
+                    <menuitem id="adhoc2rep" label="${Launcher.NEW_REPORT_TOOLTIP}" command="mantleXulHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" />
+            </menubar>
+	    </overlay>
     </overlays>  
     
    <static-paths>

@@ -25,6 +25,7 @@ package org.pentaho.platform.plugin.adhoc;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -95,10 +96,7 @@ import org.pentaho.platform.api.engine.IPluginManager;
 import org.pentaho.platform.api.engine.IPluginResourceLoader;
 import org.pentaho.platform.api.engine.IRuntimeContext;
 import org.pentaho.platform.api.engine.ISolutionEngine;
-import org.pentaho.platform.api.engine.ISolutionFile;
-import org.pentaho.platform.api.engine.ISolutionFilter;
 import org.pentaho.platform.api.engine.PentahoAccessControlException;
-import org.pentaho.platform.api.repository.ISolutionRepository;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.repository2.unified.UnifiedRepositoryException;
@@ -310,10 +308,12 @@ public class AdhocWebService extends ServletBase {
       doc = getWaqrReportSpecDoc(parameterProvider, userSession);
     } else if ("getTemplateReportSpec".equals(component)) { //$NON-NLS-1$
       doc = getTemplateReportSpec(parameterProvider, userSession);
+      /*
     } else if ("getSolutionRepositoryDoc".equals(component)) { //$NON-NLS-1$
       String path = parameterProvider.getStringParameter("path", null); //$NON-NLS-1$
       String solutionName = parameterProvider.getStringParameter("solution", null); //$NON-NLS-1$
       doc = getSolutionRepositoryDoc(solutionName, path, userSession);
+      */
     } else if ("getWaqrRepositoryDoc".equals(component)) { //$NON-NLS-1$
       String folderPath = parameterProvider.getStringParameter("folderPath", null); //$NON-NLS-1$
       doc = getWaqrRepositoryDoc(folderPath, userSession);
@@ -1694,7 +1694,6 @@ public class AdhocWebService extends ServletBase {
   public Document getTemplateReportSpec(final IParameterProvider parameterProvider, final IPentahoSession userSession)
       throws AdhocWebServiceException, IOException {
 
-    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
     String reportSpecName = parameterProvider.getStringParameter("reportSpecPath", null); //$NON-NLS-1$
     Document reportSpecDoc = null;
     if (!StringUtils.isEmpty(reportSpecName)) {
@@ -1768,7 +1767,7 @@ public class AdhocWebService extends ServletBase {
 
     return b.toString();
   }
-
+/*
   public Document getSolutionRepositoryDoc(final String solutionName, final String path,
       final IPentahoSession userSession) {
 
@@ -1796,7 +1795,7 @@ public class AdhocWebService extends ServletBase {
 
     return solutionRepositoryDoc;
   }
-
+*/
   /**
    * Used in conjunction with the xml document returned by getFullSolutionDoc()
    * @param element
@@ -1849,26 +1848,94 @@ public class AdhocWebService extends ServletBase {
     return folderElement;
   }
 
+  private void traverseFileSystem(Element parent, File curr) {
+    if (curr.isDirectory()) {
+      Element folder = parent.addElement(SolutionReposHelper.BRANCH_NODE_NAME);
+      folder.addElement(SolutionReposHelper.BRANCH_TEXT_NODE_NAME).setText(curr.getName());
+      folder.addAttribute("isDir", "true");
+      folder.addAttribute("id",  "/system/waqr/" + curr.getPath().substring(curr.getPath().indexOf("resources")).replace('\\', '/'));
+      if (curr.listFiles() != null) {
+        for (File file : curr.listFiles()) {
+          traverseFileSystem(folder, file);
+        }
+      }
+    } else {
+      Element file = parent.addElement(SolutionReposHelper.LEAF_NODE_NAME);
+      file.addElement(SolutionReposHelper.LEAF_TEXT_NODE_NAME).setText(curr.getName());
+      file.addAttribute("isDir", "false");
+      file.addAttribute("id",  "/system/waqr/" + curr.getPath().substring(curr.getPath().indexOf("resources")).replace('\\', '/'));
+      file.addElement("path").setText("/system/waqr/" + curr.getPath().substring(curr.getPath().indexOf("resources")).replace('\\', '/'));
+    }
+  }
+  
+  public static void main(String args[] ) throws Exception {
+    XMLWriter writer = new XMLWriter(System.out, OutputFormat.createPrettyPrint());
+    Document doc = new AdhocWebService().createSolutionTree(new File("package-res/resources/templates"));
+    
+    Element folderElement = AdhocWebService.getFolderElement(doc, "/system/waqr/resources");
+    Document systemDoc = null;
+    if (folderElement != null) {
+      Element clonedFolderElement = (Element) folderElement.clone();
+      AdhocWebService.removeChildElements(clonedFolderElement);
+      systemDoc = DocumentHelper.createDocument((Element) clonedFolderElement.detach());
+      systemDoc.setXMLEncoding(LocaleHelper.getSystemEncoding());
+    } else {
+      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0011_FAILED_TO_LOCATE_PATH", "/"); //$NON-NLS-1$
+      throw new AdhocWebServiceException(msg);
+    }
+    
+    
+    writer.write(systemDoc);
+    writer.flush();
+//    System.out.println(XmlDom4JHelper.docToString();
+  }
+  
+  private Document createSolutionTree(File file) {
+    // if "/system/waqr/resources" doesn't appear as id and isDir=true, this thing will blow up
+    
+    // //branch[@id='" + parentPath + "']/branch
+    // @isDir
+    // branchText element is the name
+    // leaf
+    // leafText
+    // path
+    
+    Document document = DocumentHelper.createDocument();
+    Element root = document.addElement(SolutionReposHelper.TREE_NODE_NAME);
+    
+    Element rootBranch = root.addElement(SolutionReposHelper.BRANCH_NODE_NAME);
+    rootBranch.addAttribute("id",  "/system/waqr/resources");
+    rootBranch.addElement(SolutionReposHelper.BRANCH_TEXT_NODE_NAME).setText("resources");
+    rootBranch.addAttribute("isDir", "true");
+    
+    traverseFileSystem(rootBranch, file);
+    
+    
+    return document;
+  }
+  
   private Document getWaqrTemplates(final IPentahoSession userSession, String path) {
 
     Document fullDoc = null;
-    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
     ICacheManager cacheManager = PentahoSystem.getCacheManager(userSession);
-    ISolutionFile startingFile = repository.getSolutionFile(path, ISolutionRepository.ACTION_EXECUTE);
-    ISolutionFilter waqrTemplateFilter = new ISolutionFilter() {
-      public boolean keepFile(ISolutionFile solutionFile, int actionOperation) {
-        return (solutionFile.isDirectory() || solutionFile.getFullPath().toLowerCase().contains(WAQR_REPOSITORY_PATH));
-      }
-    };
-
+    
+    String waqrResources = "system" + File.separator + "waqr" + File.separator + "resources" + File.separator + "templates"; //$NON-NLS-1$ //$NON-NLS-2$
+    String file = PentahoSystem.getApplicationContext().getSolutionPath(waqrResources);
+    
+    File dir = new File(file);
+    if (!dir.exists() || !dir.isDirectory()) {
+      error("system/waqr/resources folder does not exist.");
+      return null;
+    }
+ 
     if (cacheManager != null) {
       fullDoc = (Document) cacheManager.getFromSessionCache(userSession, AdhocWebService.FULL_SOLUTION_DOC);
       if (fullDoc == null) {
-        fullDoc = repository.getFullSolutionTree(ISolutionRepository.ACTION_EXECUTE, waqrTemplateFilter, startingFile);
+        fullDoc = createSolutionTree(dir);
         cacheManager.putInSessionCache(userSession, AdhocWebService.FULL_SOLUTION_DOC, fullDoc);
       }
     } else {
-      fullDoc = repository.getFullSolutionTree(ISolutionRepository.ACTION_EXECUTE, waqrTemplateFilter, startingFile);
+      fullDoc = createSolutionTree(dir);
     }
     return fullDoc;
   }
@@ -1876,13 +1943,19 @@ public class AdhocWebService extends ServletBase {
   private Document getWaqrRepositoryDoc(final String folderPath, final IPentahoSession userSession)
       throws AdhocWebServiceException {
 
+    // //branch[@id='" + parentPath + "']/branch
+    // @isDir
+    // branchText element is the name
+    // leaf
+    // leafText
+    // path
+    
     if ((folderPath != null && StringUtil.doesPathContainParentPathSegment(folderPath))) {
       String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0011_FAILED_TO_LOCATE_PATH", folderPath); //$NON-NLS-1$
       throw new AdhocWebServiceException(msg);
     }
-    String solutionRepositoryName = AdhocWebService.getSolutionRepositoryName(userSession);
 
-    String path = "/" + solutionRepositoryName + "/" + AdhocWebService.WAQR_REPOSITORY_PATH; //$NON-NLS-1$ //$NON-NLS-2$
+    String path = "/" + AdhocWebService.WAQR_REPOSITORY_PATH; //$NON-NLS-1$ //$NON-NLS-2$
     if ((folderPath != null) && (!folderPath.equals("/"))) { //$NON-NLS-1$
       path += folderPath;
     }
@@ -1906,6 +1979,7 @@ public class AdhocWebService extends ServletBase {
   /**
    * @param IPentahoSession userSession
    */
+  /*
   protected Document createSolutionRepositoryDoc(final String solutionName, final String path,
       final IPentahoSession userSession) {
     ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
@@ -1913,7 +1987,7 @@ public class AdhocWebService extends ServletBase {
 
     return document;
   }
-
+*/
   /**
    * @param IPentahoSession userSession
    */
@@ -1924,21 +1998,10 @@ public class AdhocWebService extends ServletBase {
     }
   }
 
-  /**
-   * Get the solution repository name, for instance, "pentaho-solutions".
-   * @param userSession
-   * @return String containing the name of the solution repository
-   */
-  private static String getSolutionRepositoryName(final IPentahoSession userSession) {
-    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
-    ISolutionFile rootFolder = repository.getRootFolder(ISolutionRepository.ACTION_EXECUTE);
-    return rootFolder.getSolution();
-  }
-
   // should be moved to AdhocWebServiceTest, but the solvable problem of calling
   // private methods needs to be addressed. don't have time at the moment, dude.
   // to run this, you need to have -ea on the JVM command line
-  public static void main(String[] args) {
+  public static void main2(String[] args) {
     Set<Integer> invalid = new HashSet<Integer>();
     invalid.add(ColumnWidth.WidthType.PERCENT.ordinal());
     invalid.add(ColumnWidth.WidthType.CM.ordinal());

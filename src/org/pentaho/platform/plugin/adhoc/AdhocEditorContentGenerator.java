@@ -1,19 +1,12 @@
 package org.pentaho.platform.plugin.adhoc;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.pentaho.platform.api.engine.IParameterProvider;
 import org.pentaho.platform.api.engine.IPluginManager;
 import org.pentaho.platform.api.engine.IPluginResourceLoader;
-import org.pentaho.platform.api.repository.ISolutionRepository;
-import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
-import org.pentaho.platform.engine.core.solution.SimpleParameterProvider;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.services.solution.SimpleContentGenerator;
 import org.pentaho.platform.plugin.services.pluginmgr.PluginClassLoader;
@@ -50,8 +43,8 @@ public class AdhocEditorContentGenerator extends SimpleContentGenerator {
       return null;
     }
     // get the full path with \ converted to /
-    String path = dir.getAbsolutePath().replace('\\', ISolutionRepository.SEPARATOR);
-    int pos = path.lastIndexOf(ISolutionRepository.SEPARATOR + "system" + ISolutionRepository.SEPARATOR); //$NON-NLS-1$
+    String path = dir.getAbsolutePath().replace('\\', '/');
+    int pos = path.lastIndexOf("/system/"); //$NON-NLS-1$
     if (pos != -1) {
       path = path.substring(pos + 8);
     }

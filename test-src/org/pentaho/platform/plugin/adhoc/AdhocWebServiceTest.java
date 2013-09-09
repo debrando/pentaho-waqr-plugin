@@ -20,19 +20,12 @@ package org.pentaho.platform.plugin.adhoc;
 
 import org.dom4j.Document;
 import org.dom4j.Node;
-import org.pentaho.platform.api.engine.IParameterProvider;
-import org.pentaho.platform.api.engine.IPentahoSession;
-import org.pentaho.platform.api.engine.IUserDetailsRoleListService;
-import org.pentaho.platform.api.engine.IUserRoleListService;
 import org.pentaho.platform.api.util.XmlParseException;
 import org.pentaho.platform.engine.core.solution.SimpleParameterProvider;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
-import org.pentaho.platform.engine.core.system.UserSession;
 import org.pentaho.platform.util.xml.dom4j.XmlDom4JHelper;
 import org.pentaho.test.platform.engine.core.BaseTest;
 import org.pentaho.test.platform.engine.core.BaseTestCase;
-import org.springframework.security.GrantedAuthority;
-import org.springframework.security.GrantedAuthorityImpl;
 
 import com.mockrunner.mock.web.MockHttpServletRequest;
 import com.mockrunner.mock.web.MockHttpServletResponse;
@@ -53,7 +46,7 @@ public class AdhocWebServiceTest extends BaseTestCase {
   @SuppressWarnings("unused")
   private static final String templatePath = "/templates/Pentaho/jfreereport-template.xml"; //$NON-NLS-1$   
   @SuppressWarnings("unused")
-  private static final AdhocWebServiceTestUserRoleListService userRolesLS = new AdhocWebServiceTestUserRoleListService();
+//  private static final AdhocWebServiceTestUserRoleListService userRolesLS = new AdhocWebServiceTestUserRoleListService();
   private static final MockHttpSession session = new MockHttpSession();
   private static final String SOLUTION_PATH = "test-src/solution";
 
@@ -61,6 +54,7 @@ public class AdhocWebServiceTest extends BaseTestCase {
   public String getSolutionPath() {
       return SOLUTION_PATH;  
   }
+  /*
   static class AdhocWebServiceTestUserRoleListService implements IUserRoleListService {
 
     public GrantedAuthority[] getAllAuthorities() {
@@ -82,7 +76,7 @@ public class AdhocWebServiceTest extends BaseTestCase {
     }
   
   }
-  
+  */
   @SuppressWarnings("unused")
   private static final String reportSpecContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" //$NON-NLS-1$
     + "<report-spec tool='waqr' tool-version='1.0' template-name='Pentaho'>" //$NON-NLS-1$
@@ -148,12 +142,13 @@ public class AdhocWebServiceTest extends BaseTestCase {
   
   
   public void setUp() {
-    IUserDetailsRoleListService userDetailsLS = (IUserDetailsRoleListService) new MockUserDetailsRoleListService();
+    // TODO: Create a mock session for a user - look at other system unit tests for this.
+//    IUserDetailsRoleListService userDetailsLS = (IUserDetailsRoleListService) new MockUserDetailsRoleListService();
     SimpleParameterProvider parameterProvider = new SimpleParameterProvider();
     parameterProvider.setParameter("SOLUTION_PATH", "solution.path");
-    IPentahoSession pentahoSession = userDetailsLS.getEffectiveUserSession(userName, (IParameterProvider)parameterProvider);
-    PentahoSessionHolder.setSession(pentahoSession);
-    session.setAttribute(UserSession.PENTAHO_SESSION_KEY,  pentahoSession);
+//    IPentahoSession pentahoSession = userDetailsLS.getEffectiveUserSession(userName, (IParameterProvider)parameterProvider);
+//    PentahoSessionHolder.setSession(pentahoSession);
+//    session.setAttribute(UserSession.PENTAHO_SESSION_KEY,  pentahoSession);
 
     request.setRemoteUser( userName );
     request.setBodyContent(""); //$NON-NLS-1$

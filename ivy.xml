@@ -25,17 +25,14 @@
     <dependency org="jfree" name="jcommon" rev="1.0.14" />
     <dependency org="javax.servlet" name="servlet-api" rev="2.4" />
     <dependency org="pentaho" name="pentaho-metadata" rev="${dependency.pentaho-metadata.revision}" changing="true" />
-    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-api" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
-    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-util" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
-    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-engine-core" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
-    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-engine-security" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
-    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-engine-services" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
-    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-repository" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
-    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-ui-foundation" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
-    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-web" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
-    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-plugin-actions" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
-    <dependency org="${ivy.artifact.group}" name="pentaho-bi-platform-web-servlet" rev="${dependency.bi-platform.revision}" changing="true" conf="default->default"/>
-    
+    <dependency org="pentaho" name="pentaho-platform-api" rev="${dependency.pentaho-platform.revision}" changing="true" transitive="false" conf="default->default"/>
+    <dependency org="pentaho" name="pentaho-platform-core" rev="${dependency.pentaho-platform.revision}" changing="true" transitive="false" conf="default->default"/>
+    <dependency org="pentaho" name="pentaho-platform-repository" rev="${dependency.pentaho-platform.revision}" changing="true" transitive="false" conf="default->default"/>
+    <dependency org="pentaho" name="pentaho-platform-extensions" rev="${dependency.pentaho-platform.revision}" changing="true" transitive="false" conf="default->default"/>
+    <dependency org="jaxen"   name="jaxen"                       rev="1.1"   transitive="false"/>
+    <dependency org="org.slf4j" name="slf4j-api" rev="1.7.3"/>
+    <dependency org="org.slf4j" name="slf4j-log4j12" rev="1.7.3"/>
+
     <!-- START JAX-WS (Service extension) dependencies.  You can comment these out if you are not deploying 
          a service to the BIServer -->
     <!-- metro -->
@@ -53,10 +50,11 @@
     <!-- END JAX-WS (Service extension) dependencies -->
 
     <!--  test dependencies -->
-    <dependency org="junit"              name="junit"              rev="4.4" conf="test->default"/>
-    <dependency org="pentaho" name="pentaho-bi-platform-test-foundation" rev="${dependency.bi-platform.revision}" changing="true" conf="test->default" transitive="true" />
-    <dependency org="pentaho" name="pentaho-bi-platform-plugin-services" rev="${dependency.bi-platform.revision}" changing="true" conf="test->default" transitive="true" />
-    <dependency org="com.mockrunner" name="mockrunner-servlet" rev="0.3.7" conf="test->default" />
+    <dependency org="junit"                        name="junit"                      rev="4.4" conf="test->default"/>
+    <dependency org="com.mockrunner"               name="mockrunner-servlet"         rev="0.3.7" conf="test->default" /> 
+    <dependency org="org.springframework"          name="spring"                     rev="2.5.6"         transitive="false" conf="test->default" />
+    <dependency org="org.springframework.security" name="spring-security-core"       rev="2.0.5.RELEASE" transitive="false" conf="test->default" />
+    <dependency org="pentaho"                      name="pentaho-platform-core-test" rev="${dependency.pentaho-platform.revision}" changing="true" conf="test->default" transitive="false" />
     
   </dependencies>
 </ivy-module>

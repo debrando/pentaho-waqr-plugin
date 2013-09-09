@@ -81,8 +81,6 @@ import org.pentaho.metadata.query.model.Query;
 import org.pentaho.metadata.query.model.util.QueryXmlHelper;
 import org.pentaho.metadata.repository.IMetadataDomainRepository;
 import org.pentaho.platform.api.engine.IActionParameter;
-import org.pentaho.platform.api.engine.IActionSequenceResource;
-import org.pentaho.platform.api.engine.ICacheManager;
 import org.pentaho.platform.api.engine.ILogger;
 import org.pentaho.platform.api.engine.IMessageFormatter;
 import org.pentaho.platform.api.engine.IParameterProvider;
@@ -91,11 +89,12 @@ import org.pentaho.platform.api.engine.IPentahoSession;
 import org.pentaho.platform.api.engine.IPentahoUrlFactory;
 import org.pentaho.platform.api.engine.IRuntimeContext;
 import org.pentaho.platform.api.engine.ISolutionEngine;
-import org.pentaho.platform.api.engine.ISolutionFile;
-import org.pentaho.platform.api.engine.ISolutionFilter;
 import org.pentaho.platform.api.engine.PentahoAccessControlException;
 import org.pentaho.platform.api.repository.IContentItem;
-import org.pentaho.platform.api.repository.ISolutionRepository;
+import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
+import org.pentaho.platform.api.repository2.unified.RepositoryFile;
+import org.pentaho.platform.api.repository2.unified.UnifiedRepositoryException;
+import org.pentaho.platform.api.repository2.unified.data.simple.SimpleRepositoryFileData;
 import org.pentaho.platform.api.util.XmlParseException;
 import org.pentaho.platform.engine.core.output.SimpleOutputHandler;
 import org.pentaho.platform.engine.core.solution.ActionInfo;
@@ -212,7 +211,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
     if (instanceId == null){
       setInstanceId(UUIDUtil.getUUIDAsString()); 
     }
-    IContentItem contentItem = outputHandler.getOutputContentItem( "response", "content", solutionName, instanceId, "text/text" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    IContentItem contentItem = outputHandler.getOutputContentItem( "content", solutionName, instanceId, "text/text" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     if( contentItem == null ) {
       error( Messages.getInstance().getErrorString("SimpleContentGenerator.ERROR_0002_NO_CONTENT_ITEM") ); //$NON-NLS-1$
       throw new InvalidParameterException( Messages.getInstance().getString("SimpleContentGenerator.ERROR_0002_NO_CONTENT_ITEM") );  //$NON-NLS-1$
@@ -357,7 +356,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
       
     } else if ("getTemplateReportSpec".equals(component)) { //$NON-NLS-1$
       getTemplateReportSpec(parameterProvider, outputStream, userSession, wrapWithSoap);
-      
+/*      
     } else if ("getSolutionRepositoryDoc".equals(component)) { //$NON-NLS-1$
       String path = parameterProvider.getStringParameter("path", null); //$NON-NLS-1$
       //path = StringUtils.isEmpty( path ) ? null : path;
@@ -365,6 +364,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
       //solutionName = StringUtils.isEmpty( solutionName ) ? null : solutionName;
       Document doc = getSolutionRepositoryDoc( solutionName, path, userSession );
       XmlDom4JHelper.saveDom(doc,outputStream, responseEncoding,false);
+  
     } else if ("getWaqrRepositoryDoc".equals(component)) { //$NON-NLS-1$
       String folderPath = parameterProvider.getStringParameter("folderPath", null); //$NON-NLS-1$
       Document doc = getWaqrRepositoryDoc( folderPath, userSession );
@@ -372,6 +372,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
 
     } else if ("getWaqrRepositoryIndexDoc".equals(component)) { //$NON-NLS-1$
       getWaqrRepositoryIndexDoc(parameterProvider, outputStream, userSession, wrapWithSoap);
+*/
     } else if ("deleteWaqrReport".equals(component)) { //$NON-NLS-1$
       deleteWaqrReport(parameterProvider, outputStream, userSession, wrapWithSoap);
     } else if ("getJFreePaperSizes".equals(component)) { //$NON-NLS-1$
@@ -498,13 +499,12 @@ public class AdhocContentGenerator extends BaseContentGenerator {
     
     String[] outputTypeList = { outputType };
 
-    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
+//    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
 
     String xactionFilename = userSession.getId() + "_wqr_preview.xaction"; //$NON-NLS-1$
 
     ByteArrayOutputStream jfreeOutputStream = new ByteArrayOutputStream();
-    createJFreeReportDefinitionAsStream( reportXML, templatePath, mqlNode, repository,
-        userSession, jfreeOutputStream );
+    createJFreeReportDefinitionAsStream( reportXML, templatePath, mqlNode, userSession, jfreeOutputStream );
 
     // create .xaction to run
     ByteArrayOutputStream xactionOutputStream = createMQLReportActionSequenceAsStream( reportName,
@@ -658,7 +658,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
    * @throws PentahoMetadataException
    */
   public void createJFreeReportDefinitionAsStream( String reportXML, String templatePath, Element mqlNode,
-      ISolutionRepository repository, IPentahoSession userSession, OutputStream jfreeMergedOutputStream )
+      IPentahoSession userSession, OutputStream jfreeMergedOutputStream )
       throws IOException, AdhocWebServiceException, PentahoMetadataException {
 
     Map reportSpecTypeToElement = null;
@@ -1418,83 +1418,86 @@ public class AdhocContentGenerator extends BaseContentGenerator {
     Document doc = component.getXmlContent();
     XmlDom4JHelper.saveDom(doc,outputStream, responseEncoding,false);
   }
-  
-  private void getWaqrRepositoryIndexDoc(final IParameterProvider parameterProvider, final OutputStream outputStream,
-	      final IPentahoSession userSession, final boolean wrapWithSoap) throws IOException, AdhocWebServiceException {
-		String responseEncoding = PentahoSystem.getSystemSetting("web-service-encoding", "utf-8"); //$NON-NLS-1$ //$NON-NLS-2$
-	    String templateFolderPath = parameterProvider.getStringParameter("templateFolderPath", null); //$NON-NLS-1$
-	    if ( StringUtil.doesPathContainParentPathSegment( templateFolderPath )) {
-	      String msg = Messages.getInstance().getString( "AdhocWebService.ERROR_0010_OPEN_INDEX_DOC_FAILED", templateFolderPath ); //$NON-NLS-1$
-	      throw new AdhocWebServiceException( msg );
-	    }
-	    
-	    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
-	    String templateFilename = "system/waqr" + templateFolderPath + "/" + ISolutionRepository.INDEX_FILENAME; //$NON-NLS-1$ //$NON-NLS-2$
-	    try {
-	      IActionSequenceResource resource = new ActionSequenceResource("", IActionSequenceResource.SOLUTION_FILE_RESOURCE, "", //$NON-NLS-1$ //$NON-NLS-2$
-	          templateFilename);
-	      InputStream inStrm =  resource.getInputStream(ISolutionRepository.ACTION_EXECUTE, null);
-	      Document indexDoc = XmlDom4JHelper.getDocFromStream(inStrm, new PentahoEntityResolver());
-	      ISolutionFile templateFile = repository.getSolutionFile(templateFilename, ISolutionRepository.ACTION_EXECUTE);
-	      repository.localizeDoc(indexDoc, templateFile);
-	      XmlDom4JHelper.saveDom(indexDoc,outputStream, responseEncoding,false);
-	    } catch (Exception e) {
-	      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0010_OPEN_INDEX_DOC_FAILED"); //$NON-NLS-1$
-	      msg = msg + " " + e.getLocalizedMessage(); //$NON-NLS-1$
-	      throw new AdhocWebServiceException( msg );
-	    }
-	  }
 
-	  private void deleteWaqrReport(final IParameterProvider parameterProvider, final OutputStream outputStream,
-	      final IPentahoSession userSession, final boolean wrapWithSoap) throws IOException, AdhocWebServiceException {
-		  String responseEncoding = PentahoSystem.getSystemSetting("web-service-encoding", "utf-8"); //$NON-NLS-1$ //$NON-NLS-2$
-	    Document statusDoc = null; 
-	    if ("true".equals(PentahoSystem.getSystemSetting("kiosk-mode", "false"))) {  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-	      XmlDom4JHelper.saveDom(WebServiceUtil.createErrorDocument(Messages.getInstance()
-	    		  .getString("PentahoGeneral.USER_FEATURE_DISABLED")),outputStream, responseEncoding,false);//$NON-NLS-1$
-	      return;
-	    }
-//	    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
-	    // NOTE: sbarkdull, shouldn't have to place the "/" on the front of the path segments.
-	    String solution = "/" + parameterProvider.getStringParameter("solution", null); //$NON-NLS-1$ //$NON-NLS-2$
-	    String path = "/" + parameterProvider.getStringParameter("path", null); //$NON-NLS-1$ //$NON-NLS-2$
-	    String filename = parameterProvider.getStringParameter("filename", null); //$NON-NLS-1$
-	    String baseFilename = AdhocContentGenerator.getBaseFilename( filename );
+  /*
+  private void getWaqrRepositoryIndexDoc(final IParameterProvider parameterProvider, final OutputStream outputStream, final IPentahoSession userSession, final boolean wrapWithSoap)
+      throws IOException, AdhocWebServiceException {
+    String responseEncoding = PentahoSystem.getSystemSetting("web-service-encoding", "utf-8"); //$NON-NLS-1$ //$NON-NLS-2$
+    String templateFolderPath = parameterProvider.getStringParameter("templateFolderPath", null); //$NON-NLS-1$
+    if (StringUtil.doesPathContainParentPathSegment(templateFolderPath)) {
+      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0010_OPEN_INDEX_DOC_FAILED", templateFolderPath); //$NON-NLS-1$
+      throw new AdhocWebServiceException(msg);
+    }
 
-	    if (StringUtil.doesPathContainParentPathSegment( path ) )
-	    {
-	      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0007_FAILED_TO_DELETE_FILES", filename ); //$NON-NLS-1$
-	      throw new  AdhocWebServiceException( msg );
-	    }
-	    
-	    String msg = ""; //$NON-NLS-1$
-	    String xactionFile = "/" + baseFilename + "." + AdhocContentGenerator.WAQR_EXTENSION + ".xaction"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	    
-	    boolean success = delete(userSession, solution, path, xactionFile);
-	    // if we fail to delete the protected xaction file, don't delete the xml or reportspec files
-	    if (success) {
-	      String jfreeFile = "/" + baseFilename + "." + AdhocContentGenerator.WAQR_EXTENSION + ".xml"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	      if (!delete(userSession, solution, path, jfreeFile)) {
-	        msg = jfreeFile + " "; //$NON-NLS-1$
-	      }
+    // ISolutionRepository repository =
+    // PentahoSystem.get(ISolutionRepository.class, userSession);
+    String templateFilename = "system/waqr" + templateFolderPath + "/index.xml"; //$NON-NLS-1$ //$NON-NLS-2$
+    try {
+      IActionSequenceResource resource = new ActionSequenceResource("", IActionSequenceResource.SOLUTION_FILE_RESOURCE, "", //$NON-NLS-1$ //$NON-NLS-2$
+          templateFilename);
+      InputStream inStrm = resource.getInputStream(RepositoryFilePermission.READ, null);
+      Document indexDoc = XmlDom4JHelper.getDocFromStream(inStrm, new PentahoEntityResolver());
+      ISolutionFile templateFile = repository.getSolutionFile(templateFilename, ISolutionRepository.ACTION_EXECUTE);
+      repository.localizeDoc(indexDoc, templateFile);
+      XmlDom4JHelper.saveDom(indexDoc, outputStream, responseEncoding, false);
+    } catch (Exception e) {
+      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0010_OPEN_INDEX_DOC_FAILED"); //$NON-NLS-1$
+      msg = msg + " " + e.getLocalizedMessage(); //$NON-NLS-1$
+      throw new AdhocWebServiceException(msg);
+    }
+  }
+*/
+  private void deleteWaqrReport(final IParameterProvider parameterProvider, final OutputStream outputStream, final IPentahoSession userSession, final boolean wrapWithSoap)
+      throws IOException, AdhocWebServiceException {
+    String responseEncoding = PentahoSystem.getSystemSetting("web-service-encoding", "utf-8"); //$NON-NLS-1$ //$NON-NLS-2$
+    Document statusDoc = null;
+    if ("true".equals(PentahoSystem.getSystemSetting("kiosk-mode", "false"))) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+      XmlDom4JHelper.saveDom(WebServiceUtil.createErrorDocument(Messages.getInstance().getString("PentahoGeneral.USER_FEATURE_DISABLED")), outputStream, responseEncoding, false);//$NON-NLS-1$
+      return;
+    }
+    // ISolutionRepository repository =
+    // PentahoSystem.get(ISolutionRepository.class, userSession);
+    // NOTE: sbarkdull, shouldn't have to place the "/" on the front of the path
+    // segments.
+    String solution = "/" + parameterProvider.getStringParameter("solution", null); //$NON-NLS-1$ //$NON-NLS-2$
+    String path = "/" + parameterProvider.getStringParameter("path", null); //$NON-NLS-1$ //$NON-NLS-2$
+    String filename = parameterProvider.getStringParameter("filename", null); //$NON-NLS-1$
+    String baseFilename = AdhocContentGenerator.getBaseFilename(filename);
 
-	      String reportSpecFile = "/" + baseFilename + "." + AdhocContentGenerator.WAQR_EXTENSION + ".xreportspec"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	      if (!delete(userSession, solution, path, reportSpecFile)) {
-	        msg += reportSpecFile + " "; //$NON-NLS-1$
-	      }
-	    } else {
-	      msg += xactionFile + " "; //$NON-NLS-1$
-	    }
+    if (StringUtil.doesPathContainParentPathSegment(path)) {
+      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0007_FAILED_TO_DELETE_FILES", filename); //$NON-NLS-1$
+      throw new AdhocWebServiceException(msg);
+    }
 
-	    if (msg.length() == 0) {
-	      statusDoc = WebServiceUtil.createStatusDocument(Messages.getInstance().getString("AdhocWebService.USER_DELETE_SUCCESSFUL"));
-	    } else {
-	      statusDoc = WebServiceUtil.createStatusDocument(Messages.getInstance().getString("AdhocWebService.ERROR_0007_FAILED_TO_DELETE_FILES", msg)); //$NON-NLS-1$
-	      throw new AdhocWebServiceException( msg );
-	    }
-	    
-	    XmlDom4JHelper.saveDom(statusDoc, outputStream, responseEncoding, wrapWithSoap);
-	  }
+    String msg = ""; //$NON-NLS-1$
+    String xactionFile = "/" + baseFilename + "." + AdhocContentGenerator.WAQR_EXTENSION + ".xaction"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
+    boolean success = delete(userSession, solution, path, xactionFile);
+    // if we fail to delete the protected xaction file, don't delete the xml or
+    // reportspec files
+    if (success) {
+      String jfreeFile = "/" + baseFilename + "." + AdhocContentGenerator.WAQR_EXTENSION + ".xml"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      if (!delete(userSession, solution, path, jfreeFile)) {
+        msg = jfreeFile + " "; //$NON-NLS-1$
+      }
+
+      String reportSpecFile = "/" + baseFilename + "." + AdhocContentGenerator.WAQR_EXTENSION + ".xreportspec"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      if (!delete(userSession, solution, path, reportSpecFile)) {
+        msg += reportSpecFile + " "; //$NON-NLS-1$
+      }
+    } else {
+      msg += xactionFile + " "; //$NON-NLS-1$
+    }
+
+    if (msg.length() == 0) {
+      statusDoc = WebServiceUtil.createStatusDocument(Messages.getInstance().getString("AdhocWebService.USER_DELETE_SUCCESSFUL"));
+    } else {
+      statusDoc = WebServiceUtil.createStatusDocument(Messages.getInstance().getString("AdhocWebService.ERROR_0007_FAILED_TO_DELETE_FILES", msg)); //$NON-NLS-1$
+      throw new AdhocWebServiceException(msg);
+    }
+
+    XmlDom4JHelper.saveDom(statusDoc, outputStream, responseEncoding, wrapWithSoap);
+  }
 
   private void saveFile(final IParameterProvider parameterProvider, final OutputStream outputStream, final IPentahoSession userSession,
       final boolean wrapWithSoap) throws AdhocWebServiceException, IOException, PentahoMetadataException, PentahoAccessControlException {
@@ -1519,7 +1522,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
   }
   
   protected void postSaveActions(final String fileName, final IParameterProvider parameterProvider, final OutputStream outputStream,
-      final IPentahoSession userSession, final boolean wrapWithSoap, int xActionSaveStatus) throws AdhocWebServiceException, IOException,
+      final IPentahoSession userSession, final boolean wrapWithSoap, boolean waqrSavedOk) throws AdhocWebServiceException, IOException,
       PentahoMetadataException, PentahoAccessControlException {
   }
   
@@ -1554,7 +1557,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
       String msg = Messages.getInstance().getString( "AdhocWebService.ERROR_0008_MISSING_OR_INVALID_REPORT_NAME" ); //$NON-NLS-1$
       throw new AdhocWebServiceException( msg );
     }
-    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
+//    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
     String baseUrl = PentahoSystem.getApplicationContext().getSolutionPath(""); //$NON-NLS-1$
 
     Document reportSpecDoc = null;
@@ -1594,8 +1597,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
     String xreportSpecFilename = baseName + ".xreportspec"; //$NON-NLS-1$ 
 
     ByteArrayOutputStream jfreeOutputStream = new ByteArrayOutputStream();
-    createJFreeReportDefinitionAsStream( reportXML, templatePath, mqlNode, repository,
-        userSession, jfreeOutputStream );
+    createJFreeReportDefinitionAsStream( reportXML, templatePath, mqlNode, userSession, jfreeOutputStream );
     String jfreeString = jfreeOutputStream.toString( LocaleHelper.getSystemEncoding() );
     
     // create .xaction to save
@@ -1609,34 +1611,69 @@ public class AdhocContentGenerator extends BaseContentGenerator {
     }
     String path = solutionName + solutionPath + "/"; //$NON-NLS-1$ 
 
-    int jfreeSaveStatus = ISolutionRepository.FILE_ADD_FAILED;
-    int xreportSpecSaveStatus = ISolutionRepository.FILE_ADD_FAILED;
-
-    int xactionSaveStatus = repository.publish(baseUrl, path, xactionFilename,
-        xactionOutputStream.toString(LocaleHelper.getSystemEncoding()).getBytes(), overwrite);
-    if (xactionSaveStatus == ISolutionRepository.FILE_ADD_SUCCESSFUL) {
-      // add jfree report xml
-      jfreeSaveStatus = repository.publish(baseUrl, path, jfreeFilename,
-          jfreeString.getBytes( LocaleHelper.getSystemEncoding() ), overwrite);
-      if (jfreeSaveStatus == ISolutionRepository.FILE_ADD_SUCCESSFUL) {
-        xreportSpecSaveStatus = repository.publish(baseUrl, path, xreportSpecFilename, reportXML
-            .getBytes(LocaleHelper.getSystemEncoding()), overwrite);
-      }
-      postSaveActions(fileName, parameterProvider, outputStream, userSession, wrapWithSoap, xactionSaveStatus);
+    RepositoryFile repoFile = null;
+    IUnifiedRepository repository = PentahoSystem.get(IUnifiedRepository.class);
+    try {
+      repoFile = repository.getFile(path + baseName);
+    } catch (UnifiedRepositoryException e) {
+      // file does not exist, ignore exception
     }
-    int[] errorStatusAr = { xactionSaveStatus, jfreeSaveStatus, xreportSpecSaveStatus };
-    int errorStatus = AdhocContentGenerator.getSaveErrorStatus(errorStatusAr);
-    if (errorStatus == ISolutionRepository.FILE_ADD_SUCCESSFUL) {
+    if (repoFile != null) {
+      repoFile = repository.updateFile(repoFile, new SimpleRepositoryFileData(new ByteArrayInputStream(
+          xactionOutputStream.toString(LocaleHelper.getSystemEncoding()).getBytes()), LocaleHelper.getSystemEncoding(), "application/xml"),
+          "Update to existing file");
+    } else {
+      RepositoryFile parentFile = repository.getFile(path);
+      repoFile = new RepositoryFile.Builder(baseName).title(RepositoryFile.ROOT_LOCALE, baseName).description(RepositoryFile.ROOT_LOCALE, baseName).build();
+      repoFile = repository.createFile(parentFile.getId(), repoFile, new SimpleRepositoryFileData(
+          new ByteArrayInputStream(xactionOutputStream.toString(LocaleHelper.getSystemEncoding()).getBytes()), LocaleHelper.getSystemEncoding(),
+          "application/xml"), "Initial WAQR File Check-in");
+    }
+
+    RepositoryFile jfreeFile = null;
+    try {
+      jfreeFile = repository.getFile(path + jfreeFilename);
+    } catch (UnifiedRepositoryException e) {
+      // file does not exist, ignore exception
+    }
+    if (jfreeFile != null) {
+      jfreeFile = repository.updateFile(jfreeFile, new SimpleRepositoryFileData(new ByteArrayInputStream(
+          jfreeString.getBytes( LocaleHelper.getSystemEncoding() )), LocaleHelper.getSystemEncoding(), "application/xml"),
+          "Update to existing file");
+    } else {
+      RepositoryFile parentFile = repository.getFile(path);
+      jfreeFile = new RepositoryFile.Builder(baseName).hidden(true).title(RepositoryFile.ROOT_LOCALE, jfreeFilename).description(RepositoryFile.ROOT_LOCALE, jfreeFilename).build();
+      jfreeFile = repository.createFile(parentFile.getId(), jfreeFile, new SimpleRepositoryFileData(
+          new ByteArrayInputStream(jfreeString.getBytes( LocaleHelper.getSystemEncoding())), LocaleHelper.getSystemEncoding(),
+          "application/xml"), "Initial JFree File Check-in");
+    }
+
+    RepositoryFile xreportFile = null;
+    try {
+      xreportFile = repository.getFile(path + jfreeFilename);
+    } catch (UnifiedRepositoryException e) {
+      // file does not exist, ignore exception
+    }
+    if (xreportFile != null) {
+      xreportFile = repository.updateFile(xreportFile, new SimpleRepositoryFileData(new ByteArrayInputStream(
+          reportXML.getBytes(LocaleHelper.getSystemEncoding())), LocaleHelper.getSystemEncoding(), "application/xml"),
+          "Update to existing file");
+    } else {
+      RepositoryFile parentFile = repository.getFile(path);
+      xreportFile = new RepositoryFile.Builder(baseName).hidden(true).title(RepositoryFile.ROOT_LOCALE, jfreeFilename).description(RepositoryFile.ROOT_LOCALE, jfreeFilename).build();
+      xreportFile = repository.createFile(parentFile.getId(), xreportFile, new SimpleRepositoryFileData(
+          new ByteArrayInputStream(reportXML.getBytes(LocaleHelper.getSystemEncoding())), LocaleHelper.getSystemEncoding(),
+          "application/xml"), "Initial XReport File Check-in");
+    }
+    
+    postSaveActions(fileName, parameterProvider, outputStream, userSession, wrapWithSoap, repoFile != null);
+    
+    boolean[] errorStatusAr = { repoFile != null, jfreeFile != null, xreportFile != null};
+    boolean errorStatus = AdhocContentGenerator.getSaveErrorStatus(errorStatusAr);
+    if (errorStatus) {
       
       XmlDom4JHelper.saveDom(WebServiceUtil.createStatusDocument(Messages.getInstance().getString("AdhocWebService.USER_REPORT_SAVED")),//$NON-NLS-1$ 
     		  outputStream, responseEncoding, wrapWithSoap);
-
-      // Force a refresh of the cached solution tree. This will cause the
-      // newly saved files to show up in the next directory listing.
-      // if overwrite is true, they are saving over an existing file, so that file's name
-      // will already be in the cached sol. repos. tree.
-      invalidateSolutionRepositoryTree( userSession );
-      repository.reloadSolutionRepository( userSession, repository.getLoggingLevel() );
       
     } else {
       // TODO sbarkdull, if any of the saves fails, remove the saved files
@@ -1649,10 +1686,10 @@ public class AdhocContentGenerator extends BaseContentGenerator {
         "AdhocWebService.ERROR_0005_FILE_ADD_INVALID_USER_CREDENTIALS"//$NON-NLS-1$ 
       };
       
-      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0009_SAVE_FAILED") + " " + Messages.getInstance().getString( FILE_STATUS_MSG[errorStatus] ); //$NON-NLS-1$ //$NON-NLS-2$
-      if (ISolutionRepository.FILE_EXISTS == errorStatus) {
-        msg += " (" + xreportSpecFilename + ")"; //$NON-NLS-1$ //$NON-NLS-2$
-      }
+      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0009_SAVE_FAILED") + " " + Messages.getInstance().getString( "AdhocWebService.ERROR_0002_FILE_ADD_FAILED" ); //$NON-NLS-1$ //$NON-NLS-2$
+//      if (ISolutionRepository.FILE_EXISTS == errorStatus) {
+//        msg += " (" + xreportSpecFilename + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+//      }
       throw new AdhocWebServiceException( msg );
     }
   }
@@ -1729,70 +1766,70 @@ public class AdhocContentGenerator extends BaseContentGenerator {
     XmlDom4JHelper.saveDom(document, outputStream, responseEncoding, wrapWithSoap);
   }
 
-  public void getTemplateReportSpec(final IParameterProvider parameterProvider, final OutputStream outputStream,
-	      final IPentahoSession userSession, final boolean wrapWithSoap) throws AdhocWebServiceException, IOException {
-	    String responseEncoding = PentahoSystem.getSystemSetting("web-service-encoding", "utf-8"); //$NON-NLS-1$ //$NON-NLS-2$
-	    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
-	    String reportSpecName = parameterProvider.getStringParameter("reportSpecPath", null); //$NON-NLS-1$
-	    Document reportSpecDoc = null;
-	    if ( !StringUtils.isEmpty( reportSpecName ) ) {
-	      reportSpecName = AdhocContentGenerator.WAQR_REPOSITORY_PATH + reportSpecName;
-		try {
-		   org.dom4j.io.SAXReader reader = new org.dom4j.io.SAXReader();
-		   reader.setEntityResolver(new SolutionURIResolver());
-		   reportSpecDoc =  reader.read(ActionSequenceResource.getInputStream(reportSpecName, LocaleHelper.getLocale()));
-		} catch (Throwable t) {
-		// XML document can't be read. We'll just return a null document.
-		}
-	    } else {
-	      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0005_MISSING_REPORTSPEC_NAME"); //$NON-NLS-1$
-	      throw new AdhocWebServiceException(msg);
-	    }
-	    XmlDom4JHelper.saveDom(reportSpecDoc, outputStream, responseEncoding, wrapWithSoap);
-	  }
+  public void getTemplateReportSpec(final IParameterProvider parameterProvider, final OutputStream outputStream, final IPentahoSession userSession, final boolean wrapWithSoap)
+      throws AdhocWebServiceException, IOException {
+    String responseEncoding = PentahoSystem.getSystemSetting("web-service-encoding", "utf-8"); //$NON-NLS-1$ //$NON-NLS-2$
+    String reportSpecName = parameterProvider.getStringParameter("reportSpecPath", null); //$NON-NLS-1$
+    Document reportSpecDoc = null;
+    if (!StringUtils.isEmpty(reportSpecName)) {
+      reportSpecName = AdhocContentGenerator.WAQR_REPOSITORY_PATH + reportSpecName;
+      try {
+        org.dom4j.io.SAXReader reader = new org.dom4j.io.SAXReader();
+        reader.setEntityResolver(new SolutionURIResolver());
+        reportSpecDoc = reader.read(ActionSequenceResource.getInputStream(reportSpecName, LocaleHelper.getLocale()));
+      } catch (Throwable t) {
+        // XML document can't be read. We'll just return a null document.
+      }
+    } else {
+      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0005_MISSING_REPORTSPEC_NAME"); //$NON-NLS-1$
+      throw new AdhocWebServiceException(msg);
+    }
+    XmlDom4JHelper.saveDom(reportSpecDoc, outputStream, responseEncoding, wrapWithSoap);
+  }
 
-	  public void getWaqrReportSpecDoc(final IParameterProvider parameterProvider, final OutputStream outputStream,
-	      final IPentahoSession userSession, final boolean wrapWithSoap) throws AdhocWebServiceException, IOException {
-	    String responseEncoding = PentahoSystem.getSystemSetting("web-service-encoding", "utf-8"); //$NON-NLS-1$ //$NON-NLS-2$
-	    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
-	    String solution = parameterProvider.getStringParameter("solution", null); //$NON-NLS-1$
-	    String path = parameterProvider.getStringParameter("path", null); //$NON-NLS-1$
-	    String filename = parameterProvider.getStringParameter("filename", null); //$NON-NLS-1$
-	    
-	    path = URLDecoder.decode(path);
-	    // replace the extension to get to the report spec
-	    int pos = filename.lastIndexOf("."); //$NON-NLS-1$
-	    filename = filename.substring(0, pos+1) + "xreportspec"; //$NON-NLS-1$
-	    
-	    Document reportSpecDoc = null;
-	    if ( !StringUtils.isEmpty( solution ) && (null != path)
-	        && !StringUtils.isEmpty( filename ) ) {
-	      String filePath = ActionInfo.buildSolutionPath(solution, path, filename);
-		try {
-		    org.dom4j.io.SAXReader reader = new org.dom4j.io.SAXReader();
-		    reader.setEntityResolver(new SolutionURIResolver());
-		    reportSpecDoc =  reader.read(ActionSequenceResource.getInputStream(filePath, LocaleHelper.getLocale()));
-		} catch (Throwable t) {
-		    // XML document can't be read. We'll just return a null document.
-		}
-	    } else {
-	      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0005_MISSING_REPORTSPEC_NAME"); //$NON-NLS-1$
-	      throw new AdhocWebServiceException(msg);
-	    }
-	    /* -------------------------------- BISERVER-5263 ---------------------------------------
-	     * Pre-3.6 ReportSpecs generated by waqr didn't have an xmi file specified in the domain_id
-	     * node.  Below we detect this condition (ie. we're trying to edit a pre-3.6 report using a
-	     * 3.7 dist) and we specify the default metadata.xmi file for the solution specified.
-	     */
-	    Node domainIdNode = reportSpecDoc.selectSingleNode("//report-spec/query/mql/domain_id"); //$NON-NLS-1$
-	    String domainId = domainIdNode.getText();
-	    if (!domainId.endsWith(".xmi")) { //$NON-NLS-1$
-	      domainId += "/metadata.xmi"; //$NON-NLS-1$
-	      domainIdNode.setText(domainId);
-	    }
-	    // ---------------------------------------------------------------------------------------
-	    XmlDom4JHelper.saveDom(reportSpecDoc, outputStream, responseEncoding, wrapWithSoap);
-	  }
+  public void getWaqrReportSpecDoc(final IParameterProvider parameterProvider, final OutputStream outputStream, final IPentahoSession userSession, final boolean wrapWithSoap)
+      throws AdhocWebServiceException, IOException {
+    String responseEncoding = PentahoSystem.getSystemSetting("web-service-encoding", "utf-8"); //$NON-NLS-1$ //$NON-NLS-2$
+    String solution = parameterProvider.getStringParameter("solution", null); //$NON-NLS-1$
+    String path = parameterProvider.getStringParameter("path", null); //$NON-NLS-1$
+    String filename = parameterProvider.getStringParameter("filename", null); //$NON-NLS-1$
+
+    path = URLDecoder.decode(path);
+    // replace the extension to get to the report spec
+    int pos = filename.lastIndexOf("."); //$NON-NLS-1$
+    filename = filename.substring(0, pos + 1) + "xreportspec"; //$NON-NLS-1$
+
+    Document reportSpecDoc = null;
+    if (!StringUtils.isEmpty(solution) && (null != path) && !StringUtils.isEmpty(filename)) {
+      String filePath = ActionInfo.buildSolutionPath(solution, path, filename);
+      try {
+        org.dom4j.io.SAXReader reader = new org.dom4j.io.SAXReader();
+        reader.setEntityResolver(new SolutionURIResolver());
+        reportSpecDoc = reader.read(ActionSequenceResource.getInputStream(filePath, LocaleHelper.getLocale()));
+      } catch (Throwable t) {
+        // XML document can't be read. We'll just return a null document.
+      }
+    } else {
+      String msg = Messages.getInstance().getString("AdhocWebService.ERROR_0005_MISSING_REPORTSPEC_NAME"); //$NON-NLS-1$
+      throw new AdhocWebServiceException(msg);
+    }
+    /*
+     * -------------------------------- BISERVER-5263
+     * --------------------------------------- Pre-3.6 ReportSpecs generated by
+     * waqr didn't have an xmi file specified in the domain_id node. Below we
+     * detect this condition (ie. we're trying to edit a pre-3.6 report using a
+     * 3.7 dist) and we specify the default metadata.xmi file for the solution
+     * specified.
+     */
+    Node domainIdNode = reportSpecDoc.selectSingleNode("//report-spec/query/mql/domain_id"); //$NON-NLS-1$
+    String domainId = domainIdNode.getText();
+    if (!domainId.endsWith(".xmi")) { //$NON-NLS-1$
+      domainId += "/metadata.xmi"; //$NON-NLS-1$
+      domainIdNode.setText(domainId);
+    }
+    // ---------------------------------------------------------------------------------------
+    XmlDom4JHelper.saveDom(reportSpecDoc, outputStream, responseEncoding, wrapWithSoap);
+  }
   
   private static String getErrorHtml(IPentahoSession userSession, final Exception e, String errorMsg) {
     errorMsg = StringEscapeUtils.escapeXml(errorMsg);
@@ -1815,19 +1852,19 @@ public class AdhocContentGenerator extends BaseContentGenerator {
     return b.toString();
   }
 
-  private static int getSaveErrorStatus(final int[] statusAr) {
-    for (int status : statusAr) {
-      if (status != ISolutionRepository.FILE_ADD_SUCCESSFUL) {
+  private static boolean getSaveErrorStatus(final boolean[] statusAr) {
+    for (boolean status : statusAr) {
+      if (!status) {
         return status;
       }
     }
-    return ISolutionRepository.FILE_ADD_SUCCESSFUL;
+    return true;
   }
 
   private static boolean isWaqrFilename(final String filename) {
     return filename.matches(".*\\.waqr\\..*"); //$NON-NLS-1$
   }
-
+/*
   public Document getSolutionRepositoryDoc( final String solutionName, final String path, final IPentahoSession userSession ) {
 
     Document solutionRepositoryDoc = null;
@@ -1856,7 +1893,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
 
     return solutionRepositoryDoc;
   }
-
+*/
   /**
    * Used in conjunction with the xml document returned by getFullSolutionDoc()
    * @param element
@@ -1908,7 +1945,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
     Element folderElement = (Element)doc.selectSingleNode( folderXPath );
     return folderElement;
   }
-
+/*
   private Document getWaqrTemplates( final IPentahoSession userSession, String path ) {
     
     Document fullDoc = null;
@@ -1932,7 +1969,7 @@ public class AdhocContentGenerator extends BaseContentGenerator {
     }
     return fullDoc;
   }
-
+  
   private Document getWaqrRepositoryDoc( final String folderPath, final IPentahoSession userSession ) throws AdhocWebServiceException {
 
     if ( (folderPath != null && StringUtil.doesPathContainParentPathSegment( folderPath ) )) {
@@ -1961,40 +1998,18 @@ public class AdhocContentGenerator extends BaseContentGenerator {
     }
     return systemDoc;
   }
-  
+  */
   /**
    * @param IPentahoSession userSession
    */
+  /*
   protected Document createSolutionRepositoryDoc( final String solutionName, final String path, final IPentahoSession userSession ) {
     ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
     Document document = repository.getNavigationUIDocument( solutionName, path, ISolutionRepository.ACTION_EXECUTE );
     
     return document;
   }
-
-  /**
-   * @param IPentahoSession userSession
-   */
-  private void invalidateSolutionRepositoryTree(final IPentahoSession userSession)
-  {
-    ICacheManager cacheManager = PentahoSystem.getCacheManager( userSession );
-    if ( null != cacheManager )
-    {
-      cacheManager.removeFromSessionCache( userSession, AdhocContentGenerator.SOLUTION_NAVIGATION_DOCUMENT_MAP );
-    }
-  }
-
-  /**
-   * Get the solution repository name, for instance, "pentaho-solutions".
-   * @param userSession
-   * @return String containing the name of the solution repository
-   */
-  private static String getSolutionRepositoryName(final IPentahoSession userSession)
-  {
-    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
-    ISolutionFile rootFolder = repository.getRootFolder(ISolutionRepository.ACTION_EXECUTE);
-    return rootFolder.getSolution();
-  }
+*/
   
   /**
    * If fullFilename has ".waqr.xreportspec" on the end of it,
@@ -2072,11 +2087,30 @@ public class AdhocContentGenerator extends BaseContentGenerator {
   public boolean delete(final IPentahoSession userSession, final String solution, final String path,
       final String name) throws IOException {
 
-    ISolutionRepository repository = PentahoSystem.get(ISolutionRepository.class, userSession);
+    RepositoryFile repoFile = null;
+    IUnifiedRepository repository = PentahoSystem.get(IUnifiedRepository.class);
+    
     String fullPath = ActionInfo.buildSolutionPath(
         LocaleHelper.convertISOStringToSystemDefaultEncoding(solution), 
         LocaleHelper.convertISOStringToSystemDefaultEncoding(path), 
         LocaleHelper.convertISOStringToSystemDefaultEncoding(name));
-    return repository.removeSolutionFile(fullPath);
+    
+    try {
+      repoFile = repository.getFile(fullPath);
+    } catch (UnifiedRepositoryException e) {
+      // file does not exist, ignore exception
+    }
+    if (repoFile == null) {
+      return false;
+    }
+    
+    try {
+      repository.deleteFile(repoFile.getId(), "Deleting WAQR File");
+    } catch (Exception e) {
+      error(e.getMessage(), e);
+      return false;
+    }
+    
+    return true;
   }
 }
