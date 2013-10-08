@@ -2,7 +2,7 @@
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
   <info organisation='${ivy.artifact.group}' module='${ivy.artifact.id}' revision='${project.revision}' />
 
-<!-- just a test -->
+
 
   <configurations>
     <conf name="default" />
