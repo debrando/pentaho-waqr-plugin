@@ -40,7 +40,7 @@
   </target>
   
   <!-- Creates version.xml file -->
-  <target name="dist" depends="jar" description="Creates a distribution">
+  <target name="dist" depends="jar,package" description="Creates a distribution">
     <mkdir dir="${stage.dir}"/>
     <mkdir dir="${stage.dir}/waqr"/>  
     <echo file="${stage.dir}/waqr/version.xml" message="&lt;version branch='${project.stage}'>${project.revision}&lt;/version>"/> 
