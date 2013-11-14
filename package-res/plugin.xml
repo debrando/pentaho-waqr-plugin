@@ -7,6 +7,14 @@
                     <menuitem id="adhoc2rep" label="${Launcher.NEW_REPORT_TOOLTIP}" command="mantleXulHandler.openUrl('Adhoc','Adhoc','api/repos/xwaqr/editor')" />
             </menubar>
 	    </overlay>
+	    
+	    
+    	<overlay id="launch" resourcebundle="content/waqr/resources/messages/messages">
+			<button id="launch_new_waqr"
+				command="Home.openFile('Adhoc','Adhoc','api/repos/xwaqr/editor')"
+				label="WAQR" />
+		</overlay>	    
+	    
     </overlays>  
     
    <static-paths>
