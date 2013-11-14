@@ -40,11 +40,13 @@
   </target>
   
   <!-- Creates version.xml file -->
-  <target name="dist" depends="jar,package" description="Creates a distribution">
-    <mkdir dir="${stage.dir}"/>
-    <mkdir dir="${stage.dir}/waqr"/>  
-    <echo file="${stage.dir}/waqr/version.xml" message="&lt;version branch='${project.stage}'>${project.revision}&lt;/version>"/> 
+  
+  <target name="assemble.init">
+    <mkdir dir="${approot.stage.dir}" />
+    <echo file="${stage.dir}/waqr/version.xml" message="&lt;version branch='${project.stage}'>${project.revision}&lt;/version>"/>     
   </target>
+  
+  
   
   <!-- 
   The following overrides are in place to suppress IVY dependency management.  If you
