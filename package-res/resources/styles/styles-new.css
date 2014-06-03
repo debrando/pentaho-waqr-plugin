@@ -576,7 +576,7 @@ div.browser
 {
 	font-family:Tahoma,"Trebuchet MS",Arial;
 	position:absolute; top:0px; left:0px;
-	background:url(../../resources/images/spacer.png);
+	background:url(../images/spacer.png);
 }
 input.browserSaveAsText
 {

@@ -14,8 +14,8 @@
  * @author James Dixon, Steven Barkdull
  */
 
- document.write("<!-- webcontext.js is written by PentahoWebContextFilter. Content of this file contains values of CONTEXT_PATH and FULLY_QUALIFIED_SERVER_URL --> \n");
- document.write("<script type='text/javascript' src='webcontext.js'></script>"); 
+// document.write("<!-- webcontext.js is written by PentahoWebContextFilter. Content of this file contains values of CONTEXT_PATH and FULLY_QUALIFIED_SERVER_URL --> \n");
+// document.write("<script type='text/javascript' src='webcontext.js'></script>"); 
 /**
  * This class provides a mechanism for calling a Pentaho WebService using AJAX techniques.
  * This is a stateless, static class, you should never call the ctor

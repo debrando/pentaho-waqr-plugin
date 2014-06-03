@@ -21,8 +21,8 @@ var STATUS_UNAUTHORIZED = 401;
 var STATUS_NOT_FOUND = 404;
 var base = '';
 
- document.write("<!-- webcontext.js is written by PentahoWebContextFilter. Content of this file contains values of CONTEXT_PATH and FULLY_QUALIFIED_SERVER_URL --> \n");
- document.write("<script type='text/javascript' src='webcontext.js'></script>"); 
+// document.write("<!-- webcontext.js is written by PentahoWebContextFilter. Content of this file contains values of CONTEXT_PATH and FULLY_QUALIFIED_SERVER_URL --> \n");
+// document.write("<script type='text/javascript' src='webcontext.js'></script>");
 
 /**
  * @param solution String name of the solution containing the action sequence definition being called
@@ -255,8 +255,8 @@ function pentahoPost( url, query, func, mimeType ) {
   // submit the request
   http_request.open('POST', url, async);
   http_request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-  http_request.setRequestHeader("Content-length", query.length);
-  http_request.setRequestHeader("Connection", "close");
+  //http_request.setRequestHeader("Content-length", query.length);
+  //http_request.setRequestHeader("Connection", "close");
 	http_request.send(query);
 	if ( !async )
 	{

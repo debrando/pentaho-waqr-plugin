@@ -9,7 +9,7 @@ Messages = function()
 	if (Messages.messageBundle === undefined) {
 	  Messages.messageBundle = new Array();
 		
-		Messages.addBundle("api.repos.waqr.resources.js.common.ui.messages", "message_strings");
+		//Messages.addBundle("api.repos.waqr.resources.js.common.ui.messages", "message_strings");
 	}
 };
 
